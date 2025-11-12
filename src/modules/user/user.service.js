@@ -6,18 +6,13 @@ export class UserService {
   async createUser(userData) {
     try {
       const user = new User(userData);
-      // confirmation Link
       await user.save();
-      const confirmationLink = `https://quizard-backend.vercel.app/confirm-email/${user._id}`;
-      // send email
-      const isEmailSent = await sendVerificationEmail({
-        to: user.email,
-        confirmationLink,
-      });
 
-      if (isEmailSent?.rejected?.length) {
-        return res.status(400).json({ message: "Email not sent" });
-      }
+      const confirmationLink = `https://quizard-backend.vercel.app/api/v1/users/confirm-email/${user._id}`;
+      console.log("Confirmation Link:", confirmationLink, user.email);
+
+      await sendVerificationEmail(user.email, confirmationLink);
+
       return user;
     } catch (error) {
       throw new ErrorClass(
@@ -39,6 +34,22 @@ export class UserService {
         500,
         error.message,
         "UserService.getUserByEmail"
+      );
+    }
+  }
+
+  async updateUser(userId, updateData) {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      });
+      return updatedUser;
+    } catch (error) {
+      throw new ErrorClass(
+        "Failed to update user",
+        500,
+        error.message,
+        "UserService.updateUser"
       );
     }
   }

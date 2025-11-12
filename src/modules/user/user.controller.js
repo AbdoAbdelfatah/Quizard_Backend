@@ -13,15 +13,21 @@ export class UserController {
       .status(201)
       .json({ message: "User registered successfully", user: newUser });
   }
+
   async confirmEmail(req, res) {
-    const userId = req.params.userId;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const { userId } = req.params;
+    if (!userId) {
+      return next(
+        new ErrorClass("userId is required", 400, "Validation Error")
+      );
     }
-    const accessToken = generateAccessToken({ userId: user._id });
-    user.isVerified = true;
-    await user.save();
+    const updatedUser = await userService.updateUser(userId, {
+      isConfirmed: true,
+    });
+    if (!updatedUser) {
+      return next(new ErrorClass("User not found", 404, "Validation Error"));
+    }
+    const accessToken = generateAccessToken({ userId: updatedUser._id });
     res
       .status(200)
       .json({ message: "Email confirmed successfully", accessToken });
