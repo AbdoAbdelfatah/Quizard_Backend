@@ -8,7 +8,7 @@ export class UserService {
       const user = new User(userData);
       // confirmation Link
       await user.save();
-      const confirmationLink = `https://localhost/confirm-email/${user._id}`;
+      const confirmationLink = `https://quizard-backend.vercel.app/confirm-email/${user._id}`;
       // send email
       const isEmailSent = await sendVerificationEmail({
         to: user.email,
