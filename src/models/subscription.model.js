@@ -14,14 +14,6 @@ const subscriptionSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Status
-    status: {
-      type: String,
-      enum: ["active", "expired", "cancelled", "pending"],
-      default: "pending",
-      index: true,
-    },
-
     // Dates
     startDate: {
       type: Date,
@@ -48,17 +40,11 @@ const subscriptionSchema = new mongoose.Schema(
 );
 
 // Indexes
-subscriptionSchema.index({ user: 1, status: 1 });
-subscriptionSchema.index({ endDate: 1, status: 1 });
+subscriptionSchema.index({ user: 1 });
 
 // Calculate remaining credits
 subscriptionSchema.virtual("creditsRemaining").get(function () {
   return Math.max(0, this.creditsAllocated - this.creditsUsed);
-});
-
-// Check if subscription is valid
-subscriptionSchema.virtual("isValid").get(function () {
-  return this.status === "active" && this.endDate > new Date();
 });
 
 export default mongoose.models.Subscription ||

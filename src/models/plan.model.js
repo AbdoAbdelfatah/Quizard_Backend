@@ -25,14 +25,7 @@ const planSchema = new mongoose.Schema(
 
     // Plan details
     description: String,
-
-    // Duration in days
-    durationDays: {
-      type: Number,
-      required: true,
-      default: 30,
-    },
-
+    feature: [String],
     // Status
     isActive: {
       type: Boolean,
