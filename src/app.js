@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import userRouter from "./modules/user/user.route.js";
 import moduleRouter from "./modules/module/module.route.js";
-
+import cors from "cors";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, "uploads", "profiles");
@@ -14,8 +14,13 @@ if (!fs.existsSync(uploadsDir)) {
 }
 const app = express();
 
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend URL
+    credentials: true,
+  })
+); 
 app.use(express.json());
-
 // Define your routes here
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/v1/users", userRouter);
