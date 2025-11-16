@@ -16,7 +16,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend URL
+    origin: [
+      "http://localhost:5173",
+      "https://quizzard-frontend.vercel.app", // <-- add your deployed frontend URL here
+    ],
     credentials: true,
   })
 ); 
