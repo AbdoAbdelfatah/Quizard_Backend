@@ -11,6 +11,10 @@ const userService = new UserService();
 export class UserController {
   async registerUser(req, res) {
     const userData = req.body;
+    const existingUser = await userService.getUserByEmail(userData.email);
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
     const newUser = await userService.createUser(userData);
     res
       .status(201)
