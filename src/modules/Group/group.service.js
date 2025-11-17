@@ -59,7 +59,13 @@ export class GroupService {
                 .populate({
                     path: "group",
                     select: "title owner inviteCode coverUrl",
-                });
+                    populate: {
+                        path: "owner",
+                        select: "firstName lastName"
+                    }
+                })
+         
+
 
             if (memberships.length === 0) return [];
 
@@ -86,6 +92,7 @@ export class GroupService {
                             ...group.toObject(),
                             membersCount,
                             modulesCount,
+                            
                         },
                     };
                 })
