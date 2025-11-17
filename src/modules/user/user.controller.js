@@ -9,7 +9,7 @@ import { ErrorClass } from "../../utils/errorClass.util.js";
 const userService = new UserService();
 
 export class UserController {
-  async registerUser(req, res) {
+  async registerUser(req, res, next) {
     const userData = req.body;
     const existingUser = await userService.getUserByEmail(userData.email);
     if (existingUser) {
