@@ -4,8 +4,8 @@ import {
   generateAccessToken,
   verifyAccessToken,
 } from "../../utils/jwt.util.js";
-import { log } from "console";
 import { cloudinaryConfig } from "../../config/cloudinary.config.js";
+import { ErrorClass } from "../../utils/errorClass.util.js";
 const userService = new UserService();
 
 export class UserController {
@@ -13,7 +13,9 @@ export class UserController {
     const userData = req.body;
     const existingUser = await userService.getUserByEmail(userData.email);
     if (existingUser) {
-      return res.status(400).json({ message: "Email already in use" });
+      return next(
+        new ErrorClass("Email is already exits", 400, "Validation Error")
+      );
     }
     const newUser = await userService.createUser(userData);
     res
