@@ -79,10 +79,12 @@ export class GroupService {
 
                     return {
                         ...membershipObj,
-                        group: {
-                            ...group.toObject(),
-                            membersCount,
-                            modulesCount,
+                        data: {
+                            group: {
+                                ...group.toObject(),
+                                membersCount,
+                                modulesCount,
+                            }
                         },
                     };
                 })
