@@ -23,13 +23,10 @@ export class GroupService {
 
     async getGroupById(groupId, userId) {
         try {
-            console.log(userId)
-            // 1️⃣ Check if the user is a member of this group
             const membership = await GroupMember.findOne({
                 group: groupId,
                 user: userId,
             });
-            console.log(membership)
             const role = membership?.role
             if (!membership) {
                 throw new ErrorClass(
@@ -39,11 +36,10 @@ export class GroupService {
             }
 
             // 2️⃣ Fetch the group
-            const group = await Group.findById(groupId);
+            const group = await Group.findById(groupId).select("-_id");
             if (!group) {
                 throw new ErrorClass("Cannot get group", 404);
             }
-
             return { group, role };
         } catch (error) {
             if (error instanceof ErrorClass) throw error;
