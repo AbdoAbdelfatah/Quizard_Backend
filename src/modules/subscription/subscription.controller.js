@@ -64,6 +64,7 @@ export class SubscriptionController {
   // ------------------------------------------------------
   async handleStripeWebhook(req, res) {
     let event;
+    console.log("iam in webhook");
 
     try {
       const signature = req.headers["stripe-signature"];
