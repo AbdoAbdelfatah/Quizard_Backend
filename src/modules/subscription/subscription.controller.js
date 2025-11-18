@@ -1,4 +1,4 @@
-import { stripe } from "../../config/stripe.config.js";
+import { getStripe } from "../../config/stripe.config.js";
 import { UserService } from "../user/user.service.js";
 import { SubscriptionService } from "./subscription.service.js";
 import Plan from "../../models/plan.model.js";
@@ -30,7 +30,7 @@ export class SubscriptionController {
             "createCheckoutSession"
           )
         );
-
+      const stripe = getStripe();
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer_email: user.email,
@@ -40,8 +40,8 @@ export class SubscriptionController {
         metadata: { userId: user._id.toString(), planId: plan._id.toString() },
         subscription_data: {
           metadata: {
-            userId: user._id.toString(),
-            planId: plan._id.toString(),
+            userId: user._id,
+            planId: plan._id,
           },
         },
       });
