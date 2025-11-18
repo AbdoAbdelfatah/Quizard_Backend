@@ -40,6 +40,7 @@ export const sendPaymentConfirmationEmail = async (
   startDate,
   endDate
 ) => {
+  console.log(`Sending payment confirmation email to ${to}...`);
   try {
     if (!process.env.SENDGRID_API_KEY) {
       throw new Error("Missing SENDGRID_API_KEY environment variable");
