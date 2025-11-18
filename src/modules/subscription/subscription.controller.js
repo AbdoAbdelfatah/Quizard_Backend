@@ -35,8 +35,8 @@ export class SubscriptionController {
         mode: "subscription",
         customer_email: user.email,
         line_items: [{ price: plan.stripePriceId, quantity: 1 }],
-        success_url: `${process.env.CLIENT_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.CLIENT_URL}/subscription/cancel`,
+        success_url: ``,
+        cancel_url: ``,
         metadata: { userId: user._id.toString(), planId: plan._id.toString() },
         subscription_data: {
           metadata: {
