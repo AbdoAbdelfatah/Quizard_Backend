@@ -68,7 +68,7 @@ export class SubscriptionController {
     let event;
     const stripe = getStripe();
 
-    console.log("Webhook received");
+    console.log("Webhook received" + process.env.STRIPE_WEBHOOK_SECRET);
 
     // CRITICAL: Validate webhook secret exists
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
