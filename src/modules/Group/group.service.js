@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { ErrorClass } from "../../utils/errorClass.util.js";
 import Group from "../../models/group.model.js"
+import User from "../../models/user.model.js"
 import GroupMember from "../../models/groupMember.model.js"
 import Module from "../../models/module.model.js"
 
@@ -64,7 +65,7 @@ export class GroupService {
                         select: "firstName lastName"
                     }
                 })
-         
+
 
 
             if (memberships.length === 0) return [];
@@ -92,7 +93,7 @@ export class GroupService {
                             ...group.toObject(),
                             membersCount,
                             modulesCount,
-                            
+
                         },
                     };
                 })
@@ -116,12 +117,36 @@ export class GroupService {
                 ...data,
                 owner: authUser._id
             });
+            console.log(authUser)
+            await User.findByIdAndUpdate(authUser._id, { teachingCourses: teachingCourses + 1 }, { new: true })
             await GroupMember.create({
                 group: createdGroup._id,
                 user: authUser._id,
                 role: "teacher"
             })
             return createdGroup;
+        } catch (error) {
+            throw new ErrorClass(
+                "Failed to create group",
+                500,
+                error.message,
+                "groupService.createGroup"
+            );
+        }
+    }
+
+    async joinGroup(inviteCode, userId) {
+        try {
+            const groupSelected = await Group.findOne({ inviteCode })
+            if (!groupSelected) throw new ErrorClass("Cannot get groups", 404);
+            if (groupSelected.owner === userId) throw new ErrorClass("You are Teacher in this group", 404);
+            const existGroup = await GroupMember.findOne({ group: groupSelected._id, user: userId })
+            if (existGroup) throw new ErrorClass("You already joined this group", 404);
+            const newGroupMember = await GroupMember.create({
+                group: groupSelected._id,
+                user: userId,
+            })
+            return newGroupMember;
         } catch (error) {
             throw new ErrorClass(
                 "Failed to create group",

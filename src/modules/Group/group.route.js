@@ -16,6 +16,7 @@ router.get("/me", auth(), errorHandler(groupController.getMyGroups));
 router.get("/:id", auth(), errorHandler(groupController.getGroupById));
 
 router.post("/", auth(), validate(createGroupSchema), errorHandler(groupController.createGroup));
+router.post("/join", auth(), errorHandler(groupController.joinGroup));
 router.patch("/:id", auth(), validate(updateGroupSchema), errorHandler(groupController.updateGroup));
 
 router.delete("/:id/hard", auth(), errorHandler(groupController.deleteGroup));
