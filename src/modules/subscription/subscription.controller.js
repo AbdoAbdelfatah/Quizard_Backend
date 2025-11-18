@@ -79,7 +79,7 @@ export class SubscriptionController {
         new ErrorClass(err.message, 500, null, "Webhook processing error")
       );
     }
-
+    console.log("1------->" + event.type);
     try {
       // Reusable logic for creation + renewal
       const processSubscription = async (stripeSubscription) => {
@@ -120,11 +120,10 @@ export class SubscriptionController {
           console.error("Failed to send payment confirmation email:", err);
         }
       };
-
+      console.log("2------->" + event.type);
       // ----------------------------
       //        EVENT SWITCH
       // ----------------------------
-      console.log("------->" + event.type);
 
       switch (event.type) {
         case "customer.subscription.created":
