@@ -64,7 +64,7 @@ export class SubscriptionController {
   // ------------------------------------------------------
   async handleStripeWebhook(req, res) {
     let event;
-    console.log("iam in webhook");
+    console.log("i am in webhook");
     console.log("1------->" + event.type);
     try {
       console.log("1------->" + event.type);
