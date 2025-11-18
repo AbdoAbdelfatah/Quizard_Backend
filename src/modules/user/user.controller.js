@@ -9,6 +9,7 @@ import { ErrorClass } from "../../utils/errorClass.util.js";
 import planModel from "../../models/plan.model.js";
 import { SubscriptionService } from "../subscription/subscription.service.js";
 const userService = new UserService();
+const subscriptionService = new SubscriptionService();
 
 export class UserController {
   async registerUser(req, res, next) {
@@ -20,14 +21,14 @@ export class UserController {
       );
     }
 
-    const newUser = await UserService.createUser(userData);
+    const newUser = await userService.createUser(userData);
 
     const plan = await planModel.findOne({ price: 0 });
     const startDate = new Date(stripeSubscription.current_period_start * 1000);
     const endDate = new Date(stripeSubscription.current_period_end * 1000);
 
     // Create or update subscription
-    const newSub = await SubscriptionService.createOrUpdateSubscription({
+    const newSub = await subscriptionService.createOrUpdateSubscription({
       user: newUser._id,
       plan: plan._id,
       startDate,
@@ -37,12 +38,13 @@ export class UserController {
     });
 
     // Link subscription to user
-    await UserService.updateUser(newUser._id, {
+    const usr = await userService.updateUser(newUser._id, {
       currentSubscription: newSub._id,
     });
+
     res
       .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+      .json({ message: "User registered successfully", user: usr });
   }
 
   async confirmEmail(req, res) {
