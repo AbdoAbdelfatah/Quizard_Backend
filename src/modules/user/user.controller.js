@@ -28,8 +28,8 @@ export class UserController {
 
     // Create or update subscription
     const newSub = await SubscriptionService.createOrUpdateSubscription({
-      user: userId,
-      plan: planId,
+      user: newUser._id,
+      plan: plan._id,
       startDate,
       endDate,
       creditsAllocated: plan.credits,
@@ -37,7 +37,7 @@ export class UserController {
     });
 
     // Link subscription to user
-    await UserService.updateUser(userId, {
+    await UserService.updateUser(newUser._id, {
       currentSubscription: newSub._id,
     });
     res
