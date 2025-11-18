@@ -8,12 +8,12 @@ const planSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-
+    price: { type: Number, required: true, min: 0 },
     // Pricing
-    price: {
-      type: Number,
+    stripePriceId: {
+      type: String,
       required: true,
-      min: 0,
+      unique: true,
     },
 
     // Credits per billing cycle

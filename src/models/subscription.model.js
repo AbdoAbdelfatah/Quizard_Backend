@@ -8,44 +8,27 @@ const subscriptionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    plan: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Plan",
-      required: true,
-    },
+    plan: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
 
-    // Dates
-    startDate: {
-      type: Date,
-      default: Date.now,
-    },
-    endDate: {
-      type: Date,
-      required: true,
-    },
+    // Stripe subscription id
+    stripeSubscriptionId: { type: String, required: true, unique: true },
 
-    // Credits for this subscription period
-    creditsAllocated: {
-      type: Number,
-      required: true,
-    },
-    creditsUsed: {
-      type: Number,
-      default: 0,
-    },
+    // dates from Stripe but store local for convenience
+    startDate: Date,
+    currentPeriodEnd: Date,
+    status: String, // active, past_due, canceled, unpaid, incomplete, etc.
+
+    creditsAllocated: { type: Number, required: true },
+    creditsUsed: { type: Number, default: 0 },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Indexes
-subscriptionSchema.index({ user: 1 });
-
-// Calculate remaining credits
 subscriptionSchema.virtual("creditsRemaining").get(function () {
   return Math.max(0, this.creditsAllocated - this.creditsUsed);
 });
+
+subscriptionSchema.index({ user: 1 });
 
 export default mongoose.models.Subscription ||
   mongoose.model("Subscription", subscriptionSchema);
