@@ -35,8 +35,8 @@ export class SubscriptionController {
         mode: "subscription",
         customer_email: user.email,
         line_items: [{ price: plan.stripePriceId, quantity: 1 }],
-        success_url: ``,
-        cancel_url: ``,
+        success_url: `https://your-frontend-domain.com/subscription/success`,
+        cancel_url: `https://your-frontend-domain.com/subscription/cancel`,
         metadata: { userId: user._id.toString(), planId: plan._id.toString() },
         subscription_data: {
           metadata: {
