@@ -1,6 +1,4 @@
-import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
+import { stripe } from "../../config/stripe.config.js";
 import { UserService } from "../user/user.service.js";
 import { SubscriptionService } from "./subscription.service.js";
 import Plan from "../../models/plan.model.js";

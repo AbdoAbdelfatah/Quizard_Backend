@@ -1,5 +1,6 @@
+import express from "express";
 import { Router } from "express";
-import { SubscriptionController } from "../controllers/subscription.controller.js";
+import { SubscriptionController } from "./subscription.controller.js";
 import { auth } from "../../middlewares/authentication.middleware.js";
 
 const router = Router();
