@@ -32,6 +32,8 @@ export class SubscriptionController {
             "createCheckoutSession"
           )
         );
+      console.log("------->>>>>>" + user.email);
+
       const stripe = getStripe();
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",

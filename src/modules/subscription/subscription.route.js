@@ -6,14 +6,8 @@ const router = express.Router();
 const subscriptionController = new SubscriptionController();
 
 // Other routes with JSON parsing
-router.post(
-  "/checkout",
-  subscriptionController.createCheckoutSession.bind(subscriptionController)
-);
+router.post("/checkout", subscriptionController.createCheckoutSession);
 
-router.get(
-  "/my-subscription",
-  subscriptionController.getMySubscription.bind(subscriptionController)
-);
+router.get("/my-subscription", subscriptionController.getMySubscription);
 
 export default router;
