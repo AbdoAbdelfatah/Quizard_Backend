@@ -18,7 +18,7 @@ const options = {
         description: "Development server",
       },
       {
-        url: "https://quizardbackend-production-c78c.up.railway.app",
+        url: "https://quizard-backend-534916389595.europe-west1.run.app",
         description: "Production server",
       },
     ],
