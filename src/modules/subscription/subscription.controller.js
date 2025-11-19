@@ -16,7 +16,6 @@ export class SubscriptionController {
     try {
       const { planId } = req.body;
       const user = req.authUser;
-
       const plan = await Plan.findById(planId);
       if (!plan)
         return next(
@@ -32,7 +31,6 @@ export class SubscriptionController {
             "createCheckoutSession"
           )
         );
-      console.log("------->>>>>>" + user.email);
 
       const stripe = getStripe();
       const session = await stripe.checkout.sessions.create({
