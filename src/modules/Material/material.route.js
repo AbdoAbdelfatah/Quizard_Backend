@@ -4,8 +4,11 @@ import { errorHandler } from "../../middlewares/globalErrorHandler.middleware.js
 import { validate } from "../../middlewares/validation.middleware.js";
 import { createMaterialSchema, updateMaterialSchema } from "./material.validation.js";
 import { MaterialController } from './material.controller.js';
+import { upload } from "../../utils/FilesUpload.js";
+
 
 const router = Router();
+
 
 const materialController = new MaterialController();
 
@@ -13,6 +16,7 @@ const materialController = new MaterialController();
 router.post(
     "/:moduleId",
     auth(),
+    upload.array('files', 10),
     validate(createMaterialSchema),
     errorHandler(materialController.createMaterial)
 );
@@ -30,6 +34,11 @@ router.put(
 router.delete("/:moduleId/:id",
     auth(),
     errorHandler(materialController.deleteMaterial)
+);
+
+router.get("/module/:moduleId",
+    auth(),
+    errorHandler(materialController.getMaterialsByModuleId)
 );
 
 export default router;
