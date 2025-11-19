@@ -22,7 +22,7 @@ const subscriptionSchema = new mongoose.Schema(
       required: true,
     },
     status: String, // active, past_due, canceled, unpaid, incomplete, etc.
-
+    isActive: { type: Boolean, default: true },
     creditsAllocated: { type: Number, required: true },
     creditsUsed: { type: Number, default: 0 },
   },
@@ -34,6 +34,7 @@ subscriptionSchema.virtual("creditsRemaining").get(function () {
 });
 
 subscriptionSchema.index({ user: 1 });
+subscriptionSchema.index({ user: 1, isActive: 1 });
 
 export default mongoose.models.Subscription ||
   mongoose.model("Subscription", subscriptionSchema);

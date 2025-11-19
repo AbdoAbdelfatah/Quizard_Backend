@@ -260,6 +260,10 @@ export class SubscriptionController {
             const subscription = await stripe.subscriptions.retrieve(
               invoice.subscription
             );
+            if (!subscription) {
+              console.error("Failed to retrieve subscription object");
+              throw new Error("Subscription not found in Stripe");
+            }
             console.log(
               "Subscription retrieved successfully:",
               subscription.id
