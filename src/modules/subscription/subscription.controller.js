@@ -250,7 +250,15 @@ export class SubscriptionController {
             break;
           }
 
-          // Extract subscription ID - it may be in invoice.subscription field OR in the lines
+          // Log invoice details for debugging
+          console.log("Invoice billing_reason:", invoice.billing_reason);
+          console.log("Invoice subscription field:", invoice.subscription);
+          console.log(
+            "Invoice has lines:",
+            invoice.lines ? invoice.lines.data.length : 0
+          );
+
+          // Extract subscription ID - try multiple approaches
           let subscriptionId = invoice.subscription;
 
           // If not found in subscription field, try to get from lines array
@@ -259,19 +267,33 @@ export class SubscriptionController {
             invoice.lines &&
             invoice.lines.data.length > 0
           ) {
-            subscriptionId = invoice.lines.data[0].subscription;
-            console.log("Extracted subscription ID from invoice lines");
+            // Look through all line items for subscription ID
+            for (const lineItem of invoice.lines.data) {
+              if (lineItem.subscription) {
+                subscriptionId = lineItem.subscription;
+                console.log("Extracted subscription ID from invoice line item");
+                break;
+              }
+            }
           }
 
-          // Check if we found a subscription
+          // For subscription_create billing reason, we might need to wait or the subscription hasn't been attached yet
           if (!subscriptionId) {
             console.warn(
               "invoice.payment_succeeded: No subscription found in invoice"
             );
-            console.warn(
-              "This might be a one-time payment or setup invoice, billing_reason:",
-              invoice.billing_reason
+            console.log(
+              "Full invoice metadata:",
+              JSON.stringify(invoice.metadata)
             );
+
+            // If billing_reason is subscription_create, this might be an initial invoice
+            // Log more details for debugging
+            if (invoice.billing_reason === "subscription_create") {
+              console.warn(
+                "This is a subscription_create invoice - subscription might be attached in separate event"
+              );
+            }
             // Don't process non-subscription invoices
             break;
           }
