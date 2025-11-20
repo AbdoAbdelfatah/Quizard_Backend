@@ -30,6 +30,14 @@ export class GroupController {
       next(error);
     }
   }
+  async getMyMembers(req, res, next) {
+    try {
+      const groups = await groupService.getMyMembers(req.params.id);
+      res.json({ success: true, data: groups });
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async createGroup(req, res, next) {
     try {

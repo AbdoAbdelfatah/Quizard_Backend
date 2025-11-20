@@ -68,7 +68,6 @@ export class GroupService {
       const data = await Promise.all(
         memberships.map(async (membership) => {
           const group = membership.group;
-          console.log(group);
           if (!group) {
             const obj = membership.toObject();
             delete obj.user;
@@ -105,6 +104,27 @@ export class GroupService {
         error.message,
         "GroupService.getMyGroups"
       );
+    }
+  }
+
+  async getMyMembers(groupId) {
+    try {
+      const memberships = await GroupMember.find({ group: groupId })
+        .select("-_id -group")
+        .populate("user");
+
+      const filtered = memberships.filter(m => m.user !== null);
+      if (memberships.length === 0) return [];
+
+      return filtered
+    } catch (error) {
+      throw new ErrorClass(
+        "Failed to get Members",
+        500,
+        error.message,
+        "groupService.getMyMembers"
+      );
+
     }
   }
 

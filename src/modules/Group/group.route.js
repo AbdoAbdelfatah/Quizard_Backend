@@ -88,6 +88,9 @@ router.get(
  */
 router.get("/me", auth(), errorHandler(groupController.getMyGroups));
 
+
+router.get("/members/:id", auth(), errorHandler(groupController.getMyMembers));
+
 /**
  * @swagger
  * /api/v1/groups/{id}:
