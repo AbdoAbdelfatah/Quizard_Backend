@@ -47,6 +47,7 @@ export const sendPaymentConfirmationEmail = async (to, userName, planName) => {
     }
 
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log("----------------------->>>>>>" + userName + planName);
 
     const msg = {
       to,
