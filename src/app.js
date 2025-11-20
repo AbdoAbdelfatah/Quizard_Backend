@@ -16,6 +16,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.config.js";
 import { SubscriptionController } from "./modules/subscription/subscription.controller.js";
 import agentRouter from "./modules/Agent/agent.routes.js";
+
+const subscriptionController = new SubscriptionController();
 const app = express();
 
 app.use(
@@ -52,6 +54,8 @@ app.use("/api/v1/modules", moduleRouter);
 app.use("/api/v1/quizzes", quizRoutes);
 app.use("/api/v1/module-quizzes", moduleQuizRoutes);
 app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/questions", questionRouter);
+app.use("/api/v1/submissions", submissionRouter);
 app.use("/api/v1/agent", agentRouter);
 // global error handler
 app.use(globalResponse);
