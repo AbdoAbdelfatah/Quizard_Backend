@@ -67,9 +67,6 @@ export class SubscriptionController {
   async handleStripeWebhook(req, res, next) {
     let event;
     const stripe = getStripe();
-
-    console.log("Webhook received" + process.env.STRIPE_WEBHOOK_SECRET);
-
     // CRITICAL: Validate webhook secret exists
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
       console.error("STRIPE_WEBHOOK_SECRET is not configured");
@@ -146,6 +143,21 @@ export class SubscriptionController {
     try {
       // Reusable logic for creation + renewal
       const processSubscription = async (stripeSubscription) => {
+        // Log the entire subscription object to debug
+        console.log("=== STRIPE SUBSCRIPTION OBJECT ===");
+        console.log("Subscription ID:", stripeSubscription.id);
+        console.log("Subscription status:", stripeSubscription.status);
+        console.log(
+          "current_period_start:",
+          stripeSubscription.current_period_start
+        );
+        console.log(
+          "current_period_end:",
+          stripeSubscription.current_period_end
+        );
+        console.log("Metadata:", stripeSubscription.metadata);
+        console.log("=====================================");
+
         const { userId, planId } = stripeSubscription.metadata;
 
         // Validate metadata
@@ -163,10 +175,34 @@ export class SubscriptionController {
           throw new Error(`Plan with ID ${planId} not found.`);
         }
 
-        const startDate = new Date(
-          stripeSubscription.current_period_start * 1000
-        );
-        const endDate = new Date(stripeSubscription.current_period_end * 1000);
+        // Use current_period_start and current_period_end if available
+        // Otherwise use period_start and period_end (alternative field names)
+        const periodStart =
+          stripeSubscription.current_period_start ||
+          stripeSubscription.period_start;
+        const periodEnd =
+          stripeSubscription.current_period_end ||
+          stripeSubscription.period_end;
+
+        if (!periodStart || !periodEnd) {
+          console.error("Missing period dates:", {
+            current_period_start: stripeSubscription.current_period_start,
+            current_period_end: stripeSubscription.current_period_end,
+            period_start: stripeSubscription.period_start,
+            period_end: stripeSubscription.period_end,
+          });
+          throw new Error(`Stripe subscription missing required period dates.`);
+        }
+
+        const startDate = new Date(periodStart * 1000);
+        const endDate = new Date(periodEnd * 1000);
+
+        // Validate dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error(
+            `Invalid dates calculated from Stripe subscription. startDate: ${startDate}, endDate: ${endDate}`
+          );
+        }
 
         // Create or update subscription
         const newSub = await subscriptionService.createOrUpdateSubscription({
@@ -176,6 +212,7 @@ export class SubscriptionController {
           endDate,
           creditsAllocated: plan.credits,
           stripeSubscriptionId: stripeSubscription.id,
+          status: stripeSubscription.status || "active",
         });
 
         console.log(`Subscription created/updated: ${newSub._id}`);
@@ -226,15 +263,80 @@ export class SubscriptionController {
         case "invoice.payment_succeeded": {
           console.log("Processing invoice.payment_succeeded event");
           const invoice = event.data.object;
-          if (invoice && invoice.subscription) {
+
+          // Check if invoice exists
+          if (!invoice) {
+            console.error(
+              "invoice.payment_succeeded: No invoice object in event data"
+            );
+            break;
+          }
+
+          // Log invoice details for debugging
+          console.log("Invoice billing_reason:", invoice.billing_reason);
+          console.log("Invoice subscription field:", invoice.subscription);
+          console.log(
+            "Invoice has lines:",
+            invoice.lines ? invoice.lines.data.length : 0
+          );
+
+          // Extract subscription ID - try multiple approaches
+          let subscriptionId = invoice.subscription;
+
+          // If not found in subscription field, try to get from lines array
+          if (
+            !subscriptionId &&
+            invoice.lines &&
+            invoice.lines.data.length > 0
+          ) {
+            // Look through all line items for subscription ID
+            for (const lineItem of invoice.lines.data) {
+              if (lineItem.subscription) {
+                subscriptionId = lineItem.subscription;
+                console.log("Extracted subscription ID from invoice line item");
+                break;
+              }
+            }
+          }
+
+          // For subscription_create billing reason, we might need to wait or the subscription hasn't been attached yet
+          if (!subscriptionId) {
+            console.warn(
+              "invoice.payment_succeeded: No subscription found in invoice"
+            );
+            console.log(
+              "Full invoice metadata:",
+              JSON.stringify(invoice.metadata)
+            );
+
+            // If billing_reason is subscription_create, this might be an initial invoice
+            // Log more details for debugging
+            if (invoice.billing_reason === "subscription_create") {
+              console.warn(
+                "This is a subscription_create invoice - subscription might be attached in separate event"
+              );
+            }
+            // Don't process non-subscription invoices
+            break;
+          }
+
+          try {
+            console.log(`Retrieving subscription: ${subscriptionId}`);
             const subscription = await stripe.subscriptions.retrieve(
-              invoice.subscription
+              subscriptionId
+            );
+            if (!subscription) {
+              console.error("Failed to retrieve subscription object");
+              throw new Error("Subscription not found in Stripe");
+            }
+            console.log(
+              "Subscription retrieved successfully:",
+              subscription.id
             );
             await processSubscription(subscription);
-          } else {
-            console.warn(
-              "invoice.payment_succeeded event missing invoice or subscription ID"
-            );
+          } catch (retrieveErr) {
+            console.error("Failed to retrieve subscription:", retrieveErr);
+            throw retrieveErr;
           }
           break;
         }
