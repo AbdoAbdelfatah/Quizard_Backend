@@ -143,32 +143,12 @@ export class SubscriptionController {
     try {
       // Reusable logic for creation + renewal
       const processSubscription = async (stripeSubscription) => {
-        // Log the entire subscription object to debug
-        console.log("=== STRIPE SUBSCRIPTION OBJECT ===");
-        console.log("Subscription ID:", stripeSubscription.id);
-        console.log("Subscription status:", stripeSubscription.status);
-        console.log(
-          "current_period_start:",
-          stripeSubscription.current_period_start
-        );
-        console.log(
-          "current_period_end:",
-          stripeSubscription.current_period_end
-        );
-        console.log("Metadata:", stripeSubscription.metadata);
-        console.log("=====================================");
-
         const { userId, planId } = stripeSubscription.metadata;
 
         // Validate metadata
         if (!userId || !planId) {
-          console.error("Missing metadata:", { userId, planId });
           throw new Error("Missing userId or planId in subscription metadata.");
         }
-
-        console.log(
-          `Processing subscription for user ${userId}, plan ${planId}`
-        );
 
         const plan = await Plan.findById(planId);
         if (!plan) {
@@ -177,45 +157,40 @@ export class SubscriptionController {
 
         // Use current_period_start and current_period_end if available
         // Otherwise use period_start and period_end (alternative field names)
-        const periodStart =
+        // For newer Stripe API versions, these are on the subscription item, not the subscription
+        let periodStart =
           stripeSubscription.current_period_start ||
           stripeSubscription.period_start;
-        const periodEnd =
+        let periodEnd =
           stripeSubscription.current_period_end ||
           stripeSubscription.period_end;
 
-        if (!periodStart || !periodEnd) {
-          console.error("Missing period dates:", {
-            current_period_start: stripeSubscription.current_period_start,
-            current_period_end: stripeSubscription.current_period_end,
-            period_start: stripeSubscription.period_start,
-            period_end: stripeSubscription.period_end,
-          });
-          throw new Error(`Stripe subscription missing required period dates.`);
+        // Check subscription items for period dates (newer Stripe API)
+        if (
+          (!periodStart || !periodEnd) &&
+          stripeSubscription.items &&
+          stripeSubscription.items.data &&
+          stripeSubscription.items.data.length > 0
+        ) {
+          const subscriptionItem = stripeSubscription.items.data[0];
+          periodStart = periodStart || subscriptionItem.current_period_start;
+          periodEnd = periodEnd || subscriptionItem.current_period_end;
         }
 
-        const startDate = new Date(periodStart * 1000);
-        const endDate = new Date(periodEnd * 1000);
-
-        // Validate dates are valid
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          throw new Error(
-            `Invalid dates calculated from Stripe subscription. startDate: ${startDate}, endDate: ${endDate}`
-          );
+        if (!periodStart || !periodEnd) {
+          throw new Error(`Stripe subscription missing required period dates.`);
         }
 
         // Create or update subscription
         const newSub = await subscriptionService.createOrUpdateSubscription({
           user: userId,
           plan: planId,
-          startDate,
-          endDate,
+          startDate: new Date(periodStart * 1000),
+          endDate: new Date(periodEnd * 1000),
           creditsAllocated: plan.credits,
           stripeSubscriptionId: stripeSubscription.id,
           status: stripeSubscription.status || "active",
         });
-
-        console.log(`Subscription created/updated: ${newSub._id}`);
 
         // Link subscription to user
         await userService.updateUser(userId, {
@@ -226,21 +201,10 @@ export class SubscriptionController {
         try {
           const user = await userService.getUserById(userId);
           if (user) {
-            await sendPaymentConfirmationEmail(
-              user.email,
-              user.fullName,
-              plan.name,
-              startDate,
-              endDate
-            );
-            console.log(`Confirmation email sent to ${user.email}`);
-          } else {
-            console.warn(
-              `User with ID ${userId} not found for email confirmation.`
-            );
+            const fullName = `${user.firstName} ${user.lastName}`;
+            await sendPaymentConfirmationEmail(user.email, fullName, plan.name);
           }
         } catch (emailErr) {
-          console.error("Failed to send payment confirmation email:", emailErr);
           // Email failure shouldn't stop webhook processing
         }
       };
@@ -275,6 +239,7 @@ export class SubscriptionController {
           // Log invoice details for debugging
           console.log("Invoice billing_reason:", invoice.billing_reason);
           console.log("Invoice subscription field:", invoice.subscription);
+          console.log("Invoice customer:", invoice.customer);
           console.log(
             "Invoice has lines:",
             invoice.lines ? invoice.lines.data.length : 0
@@ -299,23 +264,54 @@ export class SubscriptionController {
             }
           }
 
-          // For subscription_create billing reason, we might need to wait or the subscription hasn't been attached yet
+          // For subscription_create billing reason, retrieve the subscription from the customer
+          if (
+            !subscriptionId &&
+            invoice.billing_reason === "subscription_create" &&
+            invoice.customer
+          ) {
+            console.log(
+              "subscription_create invoice: Attempting to retrieve subscription from customer"
+            );
+            try {
+              // List subscriptions for this customer to find the one for this invoice
+              const subscriptions = await stripe.subscriptions.list({
+                customer: invoice.customer,
+                limit: 10,
+              });
+
+              // Find the subscription that matches this invoice period
+              if (subscriptions.data && subscriptions.data.length > 0) {
+                // Get the most recent subscription (first in list, sorted by creation date descending)
+                const subscription = subscriptions.data[0];
+                if (subscription) {
+                  subscriptionId = subscription.id;
+                  console.log(
+                    `Found subscription ${subscriptionId} for customer ${invoice.customer}`
+                  );
+                }
+              }
+            } catch (listErr) {
+              console.error(
+                "Failed to list subscriptions for customer:",
+                listErr
+              );
+            }
+          }
+
+          // Check if we found a subscription
           if (!subscriptionId) {
             console.warn(
-              "invoice.payment_succeeded: No subscription found in invoice"
+              "invoice.payment_succeeded: No subscription found in invoice or customer"
             );
             console.log(
               "Full invoice metadata:",
               JSON.stringify(invoice.metadata)
             );
-
-            // If billing_reason is subscription_create, this might be an initial invoice
-            // Log more details for debugging
-            if (invoice.billing_reason === "subscription_create") {
-              console.warn(
-                "This is a subscription_create invoice - subscription might be attached in separate event"
-              );
-            }
+            console.warn(
+              "This might be a one-time payment. billing_reason:",
+              invoice.billing_reason
+            );
             // Don't process non-subscription invoices
             break;
           }
