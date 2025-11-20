@@ -15,7 +15,6 @@ import { swaggerSpec } from "./config/swagger.config.js";
 import { SubscriptionController } from "./modules/subscription/subscription.controller.js";
 const subscriptionController = new SubscriptionController(); 
 import agentRouter from "./modules/Agent/agent.routes.js";
-const subscriptionController = new SubscriptionController();
 const app = express();
 
 app.use(
