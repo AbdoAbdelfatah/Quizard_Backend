@@ -1,4 +1,5 @@
 import agentService from './agent.service.js';
+import { buildEnhancedPrompt } from '../../utils/promptEnhancment.js';
 
 const {
   GOOGLE_CLOUD_PROJECT_ID,
@@ -229,7 +230,16 @@ async function deleteSession(req, res) {
 
 async function chat(req, res) {
   try {
-    const { message, userId, sessionId, pdfUrl } = req.body;
+    const {
+      message,
+      userId,
+      sessionId,
+      selectedModules,
+      groupId,
+      groupName,
+      educatorName,
+      conversationHistory
+    } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -245,7 +255,15 @@ async function chat(req, res) {
       });
     }
 
-    const finalMessage = pdfUrl ? `${message}\n\nPDF URL: ${pdfUrl}` : message;
+    const enhancedMessage = buildEnhancedPrompt(message, {
+      selectedModules,
+      groupId,
+      groupName,
+      educatorName,
+      sessionId,
+      conversationHistory
+    });
+    console.log(enhancedMessage);
 
     let actualSessionId = sessionId;
     if (!actualSessionId) {
@@ -253,7 +271,7 @@ async function chat(req, res) {
       actualSessionId = extractSessionId(sessionResponse);
     }
 
-    const streamQueryData = await agentService.streamQuery(userId, actualSessionId, finalMessage);
+    const streamQueryData = await agentService.streamQuery(userId, actualSessionId, enhancedMessage);
     const agentResponse = extractAgentResponse(streamQueryData);
 
     res.json({
@@ -269,7 +287,16 @@ async function chat(req, res) {
 
 async function chatStream(req, res) {
   try {
-    const { message, userId, sessionId, pdfUrl } = req.body;
+    const {
+      message,
+      userId,
+      sessionId,
+      selectedModules,
+      groupId,
+      groupName,
+      educatorName,
+      conversationHistory
+    } = req.body;
 
     if (!message || !userId) {
       return res.status(400).json({
@@ -283,7 +310,14 @@ async function chatStream(req, res) {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    const finalMessage = pdfUrl ? `${message}\n\nPDF URL: ${pdfUrl}` : message;
+    const enhancedMessage = buildEnhancedPrompt(message, {
+      selectedModules,
+      groupId,
+      groupName,
+      educatorName,
+      sessionId,
+      conversationHistory
+    });
 
     let actualSessionId = sessionId;
     if (!actualSessionId) {
@@ -291,7 +325,7 @@ async function chatStream(req, res) {
       actualSessionId = extractSessionId(sessionResponse);
     }
 
-    const streamQueryData = await agentService.streamQuery(userId, actualSessionId, finalMessage);
+    const streamQueryData = await agentService.streamQuery(userId, actualSessionId, enhancedMessage);
     const agentResponse = extractAgentResponse(streamQueryData);
 
     res.json({
