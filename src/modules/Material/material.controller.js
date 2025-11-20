@@ -2,11 +2,12 @@
 import { MaterialService } from './material.service.js';
 import { StorageService } from '../GoogleCloudStorage/StorageService.js';
 import { ErrorClass } from '../../utils/errorClass.util.js';
+import { ModuleService } from '../Module/module.service.js'
 
 
 const materialService = new MaterialService()
 const storageService = new StorageService()
-
+const moduleService = new ModuleService();
 
 export class MaterialController {
   async createMaterial(req, res, next) {
@@ -81,6 +82,10 @@ export class MaterialController {
       if (!moduleId) {
         throw new ErrorClass("Module ID is required", 400);
       }
+      // const module = await moduleService.getModuleById(moduleId);
+      // if (!module) {
+      //   throw new ErrorClass("Module not found", 404);
+      // }
       const materials = await materialService.getMaterials(moduleId);
       res.status(200).json({ success: true, data: materials });
     } catch (error) {

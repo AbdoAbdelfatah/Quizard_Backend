@@ -11,6 +11,7 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.config.js";
 import { SubscriptionController } from "./modules/subscription/subscription.controller.js";
+import agentRouter from "./modules/Agent/agent.routes.js";
 const subscriptionController = new SubscriptionController();
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/materials", materialRouter);
 app.use("/api/v1/modules", moduleRouter);
 app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/agent", agentRouter);
 // global error handler
 app.use(globalResponse);
 

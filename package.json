@@ -12,8 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
     "@google-cloud/storage": "^7.7.0",
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
@@ -27,6 +27,7 @@
     "multer": "^2.0.2",
     "nanoid": "^5.1.6",
     "nodemon": "^3.1.11",
+    "redis": "^5.10.0",
     "stripe": "^19.3.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
