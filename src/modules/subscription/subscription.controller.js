@@ -185,12 +185,29 @@ export class SubscriptionController {
 
         // Use current_period_start and current_period_end if available
         // Otherwise use period_start and period_end (alternative field names)
-        const periodStart =
+        // For newer Stripe API versions, these are on the subscription item, not the subscription
+        let periodStart =
           stripeSubscription.current_period_start ||
           stripeSubscription.period_start;
-        const periodEnd =
+        let periodEnd =
           stripeSubscription.current_period_end ||
           stripeSubscription.period_end;
+
+        // Check subscription items for period dates (newer Stripe API)
+        if (
+          (!periodStart || !periodEnd) &&
+          stripeSubscription.items &&
+          stripeSubscription.items.data &&
+          stripeSubscription.items.data.length > 0
+        ) {
+          const subscriptionItem = stripeSubscription.items.data[0];
+          periodStart = periodStart || subscriptionItem.current_period_start;
+          periodEnd = periodEnd || subscriptionItem.current_period_end;
+          console.log("Using period dates from subscription item:", {
+            periodStart,
+            periodEnd,
+          });
+        }
 
         if (!periodStart || !periodEnd) {
           console.error("Missing period dates:", {
@@ -198,6 +215,10 @@ export class SubscriptionController {
             current_period_end: stripeSubscription.current_period_end,
             period_start: stripeSubscription.period_start,
             period_end: stripeSubscription.period_end,
+            item_period_start:
+              stripeSubscription.items?.data?.[0]?.current_period_start,
+            item_period_end:
+              stripeSubscription.items?.data?.[0]?.current_period_end,
           });
           throw new Error(`Stripe subscription missing required period dates.`);
         }
