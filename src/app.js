@@ -6,11 +6,14 @@ import groupRouter from "./modules/Group/group.route.js";
 import subscriptionRouter from "./modules/subscription/subscription.route.js";
 import materialRouter from "./modules/Material/material.route.js";
 import moduleRouter from "./modules/Module/module.route.js";
+import quizRoutes from "./modules/Quiz/quiz.route.js";
+import moduleQuizRoutes from "./modules/ModuleQuiz/moduleQuiz.route.js";
 import analyticsRouter from "./modules/analytics/analytics.route.js";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.config.js";
 import { SubscriptionController } from "./modules/subscription/subscription.controller.js";
+const subscriptionController = new SubscriptionController(); 
 import agentRouter from "./modules/Agent/agent.routes.js";
 const subscriptionController = new SubscriptionController();
 const app = express();
@@ -46,9 +49,12 @@ app.use("/api/v1/plans", planRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/materials", materialRouter);
 app.use("/api/v1/modules", moduleRouter);
+app.use("/api/v1/quizzes", quizRoutes);
+app.use("/api/v1/module-quizzes", moduleQuizRoutes);
 app.use("/api/v1/analytics", analyticsRouter);
 app.use("/api/v1/agent", agentRouter);
 // global error handler
 app.use(globalResponse);
 
 export default app;
+
