@@ -10,6 +10,7 @@ const submissionSchema = new mongoose.Schema({
     },
   ],
   scoreTotal: Number,
+  totalQuizPoints: Number,
   startedAt: { type: Date, default: Date.now },
   submittedAt: Date,
 });

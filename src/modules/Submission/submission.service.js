@@ -5,25 +5,50 @@ import { ErrorClass } from "../../utils/errorClass.util.js";
 export class SubmissionService {
   async createSubmission(data) {
     try {
-      // Validate required fields
-      if (
-        !data.answers ||
-        !Array.isArray(data.answers) ||
-        data.answers.length === 0
-      ) {
-        throw new ErrorClass(
-          "Answers array is required and must not be empty",
-          400,
-          null,
-          "SubmissionService.createSubmission"
+      // Check if answers are provided and have selected options
+      const hasAnswers =
+        data.answers &&
+        Array.isArray(data.answers) &&
+        data.answers.length > 0 &&
+        data.answers.some(
+          (answer) =>
+            answer.selectedIndex !== -1 &&
+            answer.selectedIndex !== null &&
+            answer.selectedIndex !== undefined
         );
-      }
 
-      // Fetch all questions to get correct answers and points
-      const questionIds = data.answers.map((answer) => answer.question);
+      const questionIds = data.answers
+        ? data.answers.map((answer) => answer.question)
+        : [];
+
       const questions = await Question.find({
         _id: { $in: questionIds },
-      }).select("+correctOptionIndex point");
+      }).select("+correctOptionIndex point text options");
+
+      if (!hasAnswers) {
+        // No answers selected - return questions and total quiz points
+        let totalQuizPoints = 0;
+        const questionsData = questions.map((q) => {
+          totalQuizPoints += q.point || 1;
+          return {
+            _id: q._id,
+            text: q.text,
+            options: q.options,
+            point: q.point || 1,
+          };
+        });
+
+        return {
+          success: false,
+          message: "No answers selected",
+          quizData: {
+            questions: questionsData,
+            totalQuizPoints,
+          },
+          scoreTotal: 0,
+          answers: [],
+        };
+      }
 
       if (questions.length !== data.answers.length) {
         throw new ErrorClass(
@@ -42,8 +67,10 @@ export class SubmissionService {
 
       // Calculate score and update isCorrect for each answer
       let totalScore = 0;
+      let totalQuizPoints = 0;
       const processedAnswers = data.answers.map((answer) => {
         const question = questionMap[answer.question.toString()];
+        totalQuizPoints += question.point || 1;
         const isCorrect = answer.selectedIndex === question.correctOptionIndex;
 
         // Add points if answer is correct
@@ -63,6 +90,7 @@ export class SubmissionService {
         ...data,
         answers: processedAnswers,
         scoreTotal: totalScore,
+        totalQuizPoints,
         submittedAt: new Date(),
       });
 

@@ -9,13 +9,21 @@ export class SubmissionController {
         ...req.body,
         student: req.authUser._id, // Automatically set student ID from authenticated user
       };
-      const submission = await submissionService.createSubmission(
-        submissionData
-      );
+      const result = await submissionService.createSubmission(submissionData);
+
+      // Handle case where no answers are selected
+      if (result.success === false) {
+        return res.status(200).json({
+          success: true,
+          message: result.message,
+          data: result,
+        });
+      }
+
       res.status(201).json({
         success: true,
         message: "Submission created successfully",
-        data: submission,
+        data: result,
       });
     } catch (error) {
       next(error);
