@@ -260,39 +260,37 @@ async function chat(req, res) {
       selectedModules,
       groupId,
       groupName,
-      educatorName
+      educatorName,
+      conversationHistory
     } = req.body;
 
     if (!message) {
-      return res.status(400).json({
-        success: false,
-        error: 'Message is required in request body'
-      });
+      return res.status(400).json({ success: false, error: "Message is required" });
     }
 
     if (!userId) {
-      return res.status(400).json({
-        success: false,
-        error: 'userId is required in request body'
-      });
+      return res.status(400).json({ success: false, error: "userId is required" });
     }
+
+    // 🔥 Use DB to get or create session
+    const actualSessionId = await getOrCreateSession(userId, sessionId);
 
     const enhancedMessage = buildEnhancedPrompt(message, {
       selectedModules,
       groupId,
       groupName,
       educatorName,
-      sessionId
+      sessionId: actualSessionId,
+      conversationHistory
     });
-    console.log(enhancedMessage);
 
-    let actualSessionId = sessionId;
-    if (!actualSessionId) {
-      const sessionResponse = await agentService.createSession(userId);
-      actualSessionId = extractSessionId(sessionResponse);
-    }
+    // Continue your MCP logic
+    const streamQueryData = await agentService.streamQuery(
+      userId,
+      actualSessionId,
+      enhancedMessage
+    );
 
-    const streamQueryData = await agentService.streamQuery(userId, actualSessionId, enhancedMessage);
     const agentResponse = extractAgentResponse(streamQueryData);
 
     res.json({
@@ -301,10 +299,13 @@ async function chat(req, res) {
       sessionId: actualSessionId,
       response: agentResponse
     });
+
   } catch (error) {
-    handleServerError(res, error, 'Failed to communicate with agent');
+    handleServerError(res, error, "Failed to communicate with agent");
   }
 }
+
+
 
 async function chatStream(req, res) {
   try {
