@@ -87,6 +87,21 @@ function streamQuery(userId, sessionId, message) {
   });
 }
 
+async function getOrCreateSession(userId, sessionId) {
+  // if sessionId is provided by frontend
+  if (sessionId) {
+    const found = await ChatSession.findOne({ sessionId });
+
+    if (found) {
+      // if the session belongs to a different user - handle as you want
+      if (found.userId.toString() !== userId.toString()) {
+        throw new Error("Session belongs to another user");
+      }
+
+      return found.sessionId;
+    }
+  }
+}
 export default {
   PROJECT_ID,
   LOCATION,
@@ -96,5 +111,6 @@ export default {
   listSessions,
   getSession,
   deleteSession,
-  streamQuery
+  streamQuery,
+  getOrCreateSession
 };
