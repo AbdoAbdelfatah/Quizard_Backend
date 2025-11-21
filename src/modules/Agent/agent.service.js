@@ -148,6 +148,7 @@ async function getSessionOrCreate(userId) {
 }
 
 async function associateSessionToUser(userId, sessionId) {
+  if((await ChatSession.findOne({ userId, sessionId })))return sessionId;
   await ChatSession.create({ userId, sessionId });
   return sessionId;
 }
@@ -162,5 +163,6 @@ export default {
   getSession,
   deleteSession,
   streamQuery,
-  getSessionOrCreate
+  getSessionOrCreate,
+  associateSessionToUser
 };

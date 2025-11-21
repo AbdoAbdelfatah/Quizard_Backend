@@ -296,6 +296,7 @@ async function chat(req, res) {
     if (!actualSessionId) {
       actualSessionId = await agentService.getSessionOrCreate(userId);
     }
+    await agentService.associateSessionToUser(userId, actualSessionId);
 
     const streamQueryData = await agentService.streamQuery(userId, actualSessionId, enhancedMessage);
     const agentResponse = extractAgentResponse(streamQueryData);
