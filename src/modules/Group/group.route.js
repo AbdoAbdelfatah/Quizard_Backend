@@ -132,6 +132,95 @@ router.get("/:id", auth(), errorHandler(groupController.getGroupById));
 
 /**
  * @swagger
+ * /api/v1/groups/{id}/members:
+ *   get:
+ *     summary: Get all members of a group with pagination
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Group ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of members per page
+ *     responses:
+ *       200:
+ *         description: Group members retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *                         enum: [student, teacher]
+ *                       joinedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           firstName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           photoURL:
+ *                             type: string
+ *                           role:
+ *                             type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalMembers:
+ *                       type: number
+ *                     totalPages:
+ *                       type: number
+ *                     currentPage:
+ *                       type: number
+ *                     limit:
+ *                       type: number
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         description: Group not found
+ */
+router.get(
+  "/:id/members",
+  auth(),
+  errorHandler(groupController.getGroupMembers)
+);
+
+/**
+ * @swagger
  * /api/v1/groups:
  *   post:
  *     summary: Create a new group

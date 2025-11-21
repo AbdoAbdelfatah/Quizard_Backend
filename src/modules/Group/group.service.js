@@ -116,7 +116,10 @@ export class GroupService {
       const createdGroup = await Group.create({
         ...data,
         owner: authUser._id,
-        ownerName: [authUser.firstName, authUser.lastName].filter(Boolean).join(" ").trim(),
+        ownerName: [authUser.firstName, authUser.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim(),
       });
       const teachingCourses = authUser.teachingCourses;
       await User.findByIdAndUpdate(
@@ -340,6 +343,69 @@ export class GroupService {
         500,
         error.message,
         "GroupService.leaveGroup"
+      );
+    }
+  }
+
+  async getGroupMembers(groupId, page = 1, limit = 20) {
+    try {
+      if (!mongoose.isValidObjectId(groupId)) {
+        throw new ErrorClass("Invalid group ID format", 400);
+      }
+
+      // Check if group exists
+      const group = await Group.findById(groupId);
+      if (!group) {
+        throw new ErrorClass("Group not found", 404);
+      }
+
+      // Calculate pagination
+      const skip = (page - 1) * limit;
+
+      // Get total members count
+      const totalMembers = await GroupMember.countDocuments({ group: groupId });
+
+      // Fetch members with pagination
+      const members = await GroupMember.find({ group: groupId })
+        .skip(skip)
+        .limit(limit)
+        .populate({
+          path: "user",
+          select: "firstName lastName email photoURL role",
+        })
+        .sort({ joinedAt: -1 });
+
+      if (!members || members.length === 0) {
+        return {
+          members: [],
+          pagination: {
+            totalMembers: 0,
+            totalPages: 0,
+            currentPage: page,
+            limit,
+          },
+        };
+      }
+
+      const totalPages = Math.ceil(totalMembers / limit);
+
+      return {
+        members,
+        pagination: {
+          totalMembers,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ErrorClass) throw error;
+
+      throw new ErrorClass(
+        "Failed to fetch group members",
+        500,
+        error.message,
+        "GroupService.getGroupMembers"
       );
     }
   }

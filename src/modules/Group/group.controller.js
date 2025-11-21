@@ -100,4 +100,26 @@ export class GroupController {
       next(error);
     }
   }
+
+  async getGroupMembers(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      const result = await groupService.getGroupMembers(
+        id,
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Group members retrieved successfully",
+        data: result.members,
+        pagination: result.pagination,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
