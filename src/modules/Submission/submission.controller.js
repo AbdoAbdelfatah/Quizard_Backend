@@ -6,15 +6,17 @@ export class SubmissionController {
   async createSubmission(req, res, next) {
     try {
       const submissionData = {
-        ...req.body,
+        quiz: req.body.quiz,
+        answers: req.body.answers || [],
         student: req.authUser._id, // Automatically set student ID from authenticated user
+        startedAt: req.body.startedAt,
       };
       const submission = await submissionService.createSubmission(
         submissionData
       );
       res.status(201).json({
         success: true,
-        message: "Submission created successfully",
+        message: "Submission created successfully with feedback",
         data: submission,
       });
     } catch (error) {

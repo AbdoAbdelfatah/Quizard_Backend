@@ -1,50 +1,66 @@
 import Submission from "../../models/submission.model.js";
 import Question from "../../models/question.model.js";
+import Quiz from "../../models/quiz.model.js";
 import { ErrorClass } from "../../utils/errorClass.util.js";
 
 export class SubmissionService {
   async createSubmission(data) {
     try {
-      // Validate required fields
-      if (
-        !data.answers ||
-        !Array.isArray(data.answers) ||
-        data.answers.length === 0
-      ) {
+      // Validate quiz ID is provided
+      if (!data.quiz) {
         throw new ErrorClass(
-          "Answers array is required and must not be empty",
+          "Quiz ID is required",
           400,
           null,
           "SubmissionService.createSubmission"
         );
       }
 
-      // Fetch all questions to get correct answers and points
-      const questionIds = data.answers.map((answer) => answer.question);
-      const questions = await Question.find({
-        _id: { $in: questionIds },
-      }).select("+correctOptionIndex point");
-
-      if (questions.length !== data.answers.length) {
+      // Fetch quiz from database
+      const quiz = await Quiz.findById(data.quiz).populate("questions");
+      if (!quiz) {
         throw new ErrorClass(
-          "One or more questions not found",
+          "Quiz not found",
           404,
           null,
           "SubmissionService.createSubmission"
         );
       }
 
-      // Create a map of questions for easy lookup
+      // Get all questions from the quiz
+      const quizQuestions = await Question.find({
+        _id: { $in: quiz.questions },
+      }).select("+correctOptionIndex point text options");
+
+      if (!quizQuestions || quizQuestions.length === 0) {
+        throw new ErrorClass(
+          "No questions found in this quiz",
+          404,
+          null,
+          "SubmissionService.createSubmission"
+        );
+      }
+
+      // Create question map for lookup
       const questionMap = {};
-      questions.forEach((q) => {
+      let totalQuizPoints = 0;
+      quizQuestions.forEach((q) => {
         questionMap[q._id.toString()] = q;
+        totalQuizPoints += q.point || 1;
       });
 
-      // Calculate score and update isCorrect for each answer
+      // Process answers and create feedback
       let totalScore = 0;
-      const processedAnswers = data.answers.map((answer) => {
-        const question = questionMap[answer.question.toString()];
-        const isCorrect = answer.selectedIndex === question.correctOptionIndex;
+      const processedAnswers = quizQuestions.map((question) => {
+        // Find if student answered this question
+        const userAnswer = data.answers?.find(
+          (a) => a.question.toString() === question._id.toString()
+        );
+
+        // If no answer selected, mark as -1 with false
+        const selectedIndex = userAnswer?.selectedIndex ?? -1;
+        const isCorrect =
+          selectedIndex !== -1 && selectedIndex === question.correctOptionIndex;
 
         // Add points if answer is correct
         if (isCorrect) {
@@ -52,18 +68,25 @@ export class SubmissionService {
         }
 
         return {
-          question: answer.question,
-          selectedIndex: answer.selectedIndex,
+          question: question._id,
+          questionText: question.text,
+          options: question.options,
+          point: question.point || 1,
+          selectedIndex,
+          correctOptionIndex: question.correctOptionIndex,
           isCorrect,
         };
       });
 
-      // Create submission with calculated score
+      // Create submission with all feedback data
       const submission = new Submission({
-        ...data,
+        quiz: data.quiz,
+        student: data.student,
         answers: processedAnswers,
         scoreTotal: totalScore,
+        totalQuizPoints,
         submittedAt: new Date(),
+        startedAt: data.startedAt,
       });
 
       await submission.save();

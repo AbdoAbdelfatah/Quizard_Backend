@@ -2,8 +2,8 @@ import Joi from "joi";
 
 const answerSchema = Joi.object({
   question: Joi.string().trim().required(),
-  selectedIndex: Joi.number().integer().min(0).required(),
-  isCorrect: Joi.boolean().optional(), // Auto-calculated by the service
+  selectedIndex: Joi.number().integer().min(-1).required(),
+  isCorrect: Joi.boolean().optional(),
 });
 
 export const createSubmissionSchema = Joi.object({
