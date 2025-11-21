@@ -49,7 +49,7 @@ const subscriptionController = new SubscriptionController();
  */
 router.post("/checkout", auth(), subscriptionController.createCheckoutSession);
 
-router.post("freePlan", auth(), subscriptionController.subscribeFreePlan);
+router.post("/freeplan", auth(), subscriptionController.subscribeFreePlan);
 /**
  * @swagger
  * /api/v1/subscriptions/my-subscription:

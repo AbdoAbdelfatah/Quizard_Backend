@@ -4,7 +4,7 @@ import { SubscriptionService } from "./subscription.service.js";
 import Plan from "../../models/plan.model.js";
 import { ErrorClass } from "../../utils/errorClass.util.js";
 import { sendPaymentConfirmationEmail } from "../../utils/mail.util.js";
-
+import moment from "moment";
 const subscriptionService = new SubscriptionService();
 const userService = new UserService();
 
@@ -85,17 +85,17 @@ export class SubscriptionController {
           creditsUsed: 0,
           startDate,
           endDate,
-          stripeSubscriptionId: `free_${newUser._id}`,
+          stripeSubscriptionId: `free_${user._id}`,
         });
 
       // Update user with current subscription
-      await userService.updateUser(newUser._id, {
+      await userService.updateUser(user._id, {
         currentSubscription: freeSubscription._id,
       });
 
       res.status(201).json({
         message: "User registered successfully with free plan",
-        user: newUser,
+        user: user,
       });
     } catch (error) {
       next(
