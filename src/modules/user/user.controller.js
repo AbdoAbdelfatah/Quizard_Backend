@@ -1,7 +1,10 @@
 import moment from "moment";
 import { UserService } from "./user.service.js";
 import UserProfileService from "./userProfile.service.js";
-import { generateAccessToken } from "../../utils/jwt.util.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/jwt.util.js";
 import { cloudinaryConfig } from "../../config/cloudinary.config.js";
 import { ErrorClass } from "../../utils/errorClass.util.js";
 import planModel from "../../models/plan.model.js";
@@ -111,9 +114,25 @@ export class UserController {
     const accessToken = generateAccessToken({
       userId: user._id,
     });
-    res
-      .status(200)
-      .json({ message: "Login successful", accessToken, role: user.role });
+
+    const refreshToken = generateRefreshToken({
+      userId: user._id,
+    });
+
+    // Set refresh token in secure HTTP-only cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      accessToken,
+      role: user.role,
+    });
   }
   // profile controller methods will be here in future
   /**
@@ -364,6 +383,53 @@ export class UserController {
       });
     } catch (error) {
       next(error);
+    }
+  }
+
+  /**
+   * Refresh access token
+   * POST /api/v1/users/refresh-token
+   * Refresh token is automatically read from httpOnly cookie
+   */
+  async refreshAccessToken(req, res, next) {
+    try {
+      // User is already verified by refreshTokenAuth middleware
+      // req.user contains the decoded refresh token payload
+      const userId = req.user.userId;
+
+      // Generate new access token
+      const accessToken = generateAccessToken({
+        userId,
+      });
+
+      // Generate new refresh token (rotation strategy)
+      const newRefreshToken = generateRefreshToken({
+        userId,
+      });
+
+      // Set new refresh token in secure HTTP-only cookie
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: "/",
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Token refreshed successfully",
+        accessToken,
+      });
+    } catch (error) {
+      next(
+        new ErrorClass(
+          "Failed to refresh token",
+          500,
+          error.message,
+          "refreshAccessToken"
+        )
+      );
     }
   }
 }

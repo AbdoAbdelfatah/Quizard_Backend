@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { globalResponse } from "./middlewares/globalErrorHandler.middleware.js";
 import planRouter from "./modules/plan/plan.router.js";
 import userRouter from "./modules/user/user.route.js";
@@ -37,6 +38,7 @@ app.post(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Parse cookies for refresh token and other uses
 // Swagger Documentation
 app.use(
   "/api-docs",

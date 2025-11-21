@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { AnnouncementController } from "./announcement.controller.js";
-import { authentication } from "../../middlewares/authentication.middleware.js";
+import { auth } from "../../middlewares/authentication.middleware.js";
 import { announcementValidation } from "./announcement.validation.js";
-import { validation } from "../../middlewares/validation.middleware.js";
+import { validate } from "../../middlewares/validation.middleware.js";
 
 const router = Router();
 const announcementController = new AnnouncementController();
@@ -41,8 +41,8 @@ const announcementController = new AnnouncementController();
  */
 router.post(
   "/",
-  authentication,
-  validation(announcementValidation.createAnnouncement),
+  auth(),
+  validate(announcementValidation.createAnnouncement),
   announcementController.createAnnouncement.bind(announcementController)
 );
 
@@ -70,7 +70,7 @@ router.post(
  */
 router.get(
   "/:id",
-  authentication,
+  auth(),
   announcementController.getAnnouncement.bind(announcementController)
 );
 
@@ -106,7 +106,7 @@ router.get(
  */
 router.get(
   "/group/:groupId",
-  authentication,
+  auth(),
   announcementController.getGroupAnnouncements.bind(announcementController)
 );
 
@@ -142,7 +142,7 @@ router.get(
  */
 router.get(
   "/author/:userId",
-  authentication,
+  auth(),
   announcementController.getAuthorAnnouncements.bind(announcementController)
 );
 
@@ -186,7 +186,7 @@ router.get(
  */
 router.get(
   "/search/:groupId",
-  authentication,
+  auth(),
   announcementController.searchAnnouncements.bind(announcementController)
 );
 
@@ -226,8 +226,8 @@ router.get(
  */
 router.put(
   "/:id",
-  authentication,
-  validation(announcementValidation.updateAnnouncement),
+  auth(),
+  validate(announcementValidation.updateAnnouncement),
   announcementController.updateAnnouncement.bind(announcementController)
 );
 
@@ -257,7 +257,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  authentication,
+  auth(),
   announcementController.deleteAnnouncement.bind(announcementController)
 );
 

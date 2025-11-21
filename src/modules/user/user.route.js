@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UserController } from "./user.controller.js";
 import { errorHandler } from "../../middlewares/globalErrorHandler.middleware.js";
 import { auth } from "../../middlewares/authentication.middleware.js";
+import { refreshTokenAuth } from "../../middlewares/refreshToken.middleware.js";
 import { systemRoles } from "../../utils/system-roles.util.js";
 import { authorization } from "../../middlewares/authorization.middleware.js";
 import {
@@ -142,6 +143,55 @@ router.get("/confirm-email/:userId", errorHandler(userController.confirmEmail));
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post("/login", errorHandler(userController.loginUser));
+
+/**
+ * @swagger
+ * /api/v1/users/refresh-token:
+ *   post:
+ *     summary: Refresh access token using refresh token
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token (optional if using Authorization header)
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Token refreshed successfully
+ *                 accessToken:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refreshToken:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       401:
+ *         description: Unauthorized - Invalid or expired refresh token
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post(
+  "/refresh-token",
+  refreshTokenAuth,
+  errorHandler(userController.refreshAccessToken.bind(userController))
+);
 
 /**
  * @swagger
