@@ -26,26 +26,9 @@ export class UserController {
 
     const newUser = await userService.createUser(userData);
 
-    const plan = await planModel.findOne({ price: 0 });
-    const startDate = moment().toDate();
-    const endDate = moment().add(30, "days").toDate();
-    // Create or update subscription
-    const newSub = await subscriptionService.createOrUpdateSubscription({
-      user: newUser._id,
-      plan: plan._id,
-      startDate,
-      endDate,
-      creditsAllocated: plan.credits,
-    });
-
-    // Link subscription to user
-    const usr = await userService.updateUser(newUser._id, {
-      currentSubscription: newSub._id,
-    });
-
     res
       .status(201)
-      .json({ message: "User registered successfully", user: usr });
+      .json({ message: "User registered successfully", user: newUser });
   }
 
   async confirmEmail(req, res) {
