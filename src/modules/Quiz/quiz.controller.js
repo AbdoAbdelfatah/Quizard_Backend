@@ -1,6 +1,6 @@
 import { QuizService } from "./quiz.service.js";
 import { ErrorClass } from "../../utils/errorClass.util.js";
-import { io } from "../../server.js";
+import ChatSession from "../../models/chatSession.model.js";
 
 const quizService = new QuizService();
 
@@ -23,19 +23,17 @@ export class QuizController {
             
             console.log('✅ Quiz created with ID:', newQuiz._id);
             
-            // Emit WebSocket event to notify frontend
+            // Store quizId in session for frontend to detect
             if (sessionId && newQuiz._id) {
-                console.log(`🚀 Emitting quiz-created event for session: ${sessionId}, quizId: ${newQuiz._id}`);
-                io.to(sessionId).emit('quiz-created', {
-                    quizId: newQuiz._id.toString(),
-                    action: 'created',
-                    timestamp: Date.now()
-                });
-                console.log('✅ Event emitted successfully');
+                console.log(`💾 Storing quizId in session: ${sessionId}`);
+                await ChatSession.findOneAndUpdate(
+                    { sessionId },
+                    { currentQuizId: newQuiz._id },
+                    { upsert: false }
+                );
+                console.log('✅ Quiz ID stored in session');
             } else {
-                console.warn('⚠️ Cannot emit event - missing sessionId or quizId');
-                console.warn('   sessionId:', sessionId);
-                console.warn('   newQuiz._id:', newQuiz._id);
+                console.warn('⚠️ Cannot store quizId - missing sessionId or quizId');
             }
             
             res.status(201).json({
@@ -69,17 +67,17 @@ export class QuizController {
             
             console.log('✅ Quiz updated successfully');
             
-            // Emit WebSocket event to notify frontend
+            // Store quizId in session for frontend to detect
             if (sessionId) {
-                console.log(`🚀 Emitting quiz-updated event for session: ${sessionId}, quizId: ${id}`);
-                io.to(sessionId).emit('quiz-updated', {
-                    quizId: id.toString(),
-                    action: 'updated',
-                    timestamp: Date.now()
-                });
-                console.log('✅ Event emitted successfully');
+                console.log(`💾 Storing updated quizId in session: ${sessionId}`);
+                await ChatSession.findOneAndUpdate(
+                    { sessionId },
+                    { currentQuizId: id },
+                    { upsert: false }
+                );
+                console.log('✅ Quiz ID stored in session');
             } else {
-                console.warn('⚠️ Cannot emit event - missing sessionId');
+                console.warn('⚠️ Cannot store quizId - missing sessionId');
             }
             
             res.status(200).json({

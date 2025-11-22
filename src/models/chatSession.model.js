@@ -12,6 +12,11 @@ const chatSessionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true
+    },
+    currentQuizId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Quiz",
+      default: null
     }
   },
   { timestamps: true }

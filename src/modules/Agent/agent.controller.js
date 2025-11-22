@@ -337,10 +337,18 @@ async function chat(req, res) {
     console.log('📦 [RAW STREAM DATA] Keys:', Object.keys(streamQueryData || {}));
     const agentResponse = extractAgentResponse(streamQueryData);
 
+    // Get current quiz ID from session (if any)
+    const ChatSession = (await import('../../models/chatSession.model.js')).default;
+    const session = await ChatSession.findOne({ sessionId: actualSessionId });
+    const currentQuizId = session?.currentQuizId || null;
+    
+    console.log('🎯 Current quiz ID for session:', currentQuizId);
+
     // Build response object
     const responseData = {
       sessionId: actualSessionId,
       response: agentResponse,
+      quizId: currentQuizId,
       timestamp: Date.now() / 1000,
       isNewSession
     };
