@@ -132,6 +132,7 @@ async function getSessionOrCreate(userId) {
     return found.sessionId;
   }
 
+
   const newSessionResponse = await createSession(userId);
   const newSessionId =
     newSessionResponse?.session_id ||
