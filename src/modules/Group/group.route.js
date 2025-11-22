@@ -10,6 +10,10 @@ import {
 import { auth } from "./../../middlewares/authentication.middleware.js";
 import { systemRoles } from "../../utils/system-roles.util.js";
 import { authorization } from "../../middlewares/authorization.middleware.js";
+import {
+  multerHostMiddleware,
+  multerMiddleware,
+} from "../../middlewares/multer.middleware.js";
 
 const router = Router();
 const groupController = new GroupController();
@@ -224,24 +228,25 @@ router.get(
  * /api/v1/groups:
  *   post:
  *     summary: Create a new group
- *     tags: [Groups]
+ *     tags:
+ *       - Groups
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *      required: true
- *      content:
- *        multipart/form-data:
- *      schema:
- *        type: object
- *      required:
- *          - title
- *      properties:
- *        title:
- *          type: string
- *          example: Advanced JavaScript Course
- *        image:
- *          type: string
- *          format: binary
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Advanced JavaScript Course
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Group created successfully
@@ -263,7 +268,7 @@ router.post(
   "/",
   auth(),
   validate(createGroupSchema),
-  multerHostMiddleware("coverUrl", ["jpg", "jpeg", "png"]).single("image"),
+  multerHostMiddleware("coverUrl", ["jpg", "jpeg", "png"]).single("coverUrl"),
   errorHandler(groupController.createGroup)
 );
 

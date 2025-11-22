@@ -1,4 +1,5 @@
 import { GroupService } from "./group.service.js";
+import { cloudinaryConfig } from "../../config/cloudinary.config.js";
 
 const groupService = new GroupService();
 

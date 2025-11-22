@@ -121,7 +121,6 @@ export class GroupService {
           .join(" ")
           .trim(),
       });
-
       await User.findByIdAndUpdate(
         authUser._id,
         { $inc: { teachingCourses: 1 } }
