@@ -17,7 +17,7 @@ class GoogleAuthService {
    */
   async verifyGoogleToken(token) {
     try {
-      const ticket = await client.verifyIdToken({
+      const ticket = await this.client.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
