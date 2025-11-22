@@ -35,8 +35,11 @@ export class GroupService {
         throw new ErrorClass("You are not a member of this group", 403);
       }
 
-      // 2️⃣ Fetch the group
-      const group = await Group.findById(groupId);
+      // 2️⃣ Fetch the group with owner populated
+      const group = await Group.findById(groupId).populate({
+        path: "owner",
+        select: "firstName lastName email",
+      });
       if (!group) {
         throw new ErrorClass("Cannot get group", 404);
       }
@@ -121,10 +124,9 @@ export class GroupService {
           .join(" ")
           .trim(),
       });
-      await User.findByIdAndUpdate(
-        authUser._id,
-        { $inc: { teachingCourses: 1 } }
-      );
+      await User.findByIdAndUpdate(authUser._id, {
+        $inc: { teachingCourses: 1 },
+      });
 
       await GroupMember.create({
         group: createdGroup._id,
@@ -142,7 +144,6 @@ export class GroupService {
       );
     }
   }
-
 
   async updateGroupPhoto(userId, photoURL) {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
