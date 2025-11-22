@@ -279,14 +279,10 @@ async function chat(req, res) {
       });
     }
 
-    if(sessionId=="0"){
-      sessionId = await agentService.createSession(userId);
-      await agentService.associateSessionToUser(userId, sessionId);
-    }
-
     let actualSessionId = sessionId;
     if (!actualSessionId) {
-      actualSessionId = await agentService.getSessionOrCreate(userId);
+      actualSessionId = await agentService.createSession(userId);
+      await agentService.associateSessionToUser(userId, actualSessionId);
     }
 
     const enhancedMessage = buildEnhancedPrompt(message, {
