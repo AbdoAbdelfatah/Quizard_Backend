@@ -228,23 +228,20 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *             properties:
- *               title:
- *                 type: string
- *                 minLength: 3
- *                 maxLength: 40
- *                 example: Advanced JavaScript Course
- *               coverUrl:
- *                 type: string
- *                 format: uri
- *                 example: https://example.com/cover.jpg
+ *      required: true
+ *      content:
+ *        multipart/form-data:
+ *      schema:
+ *        type: object
+ *      required:
+ *          - title
+ *      properties:
+ *        title:
+ *          type: string
+ *          example: Advanced JavaScript Course
+ *        image:
+ *          type: string
+ *          format: binary
  *     responses:
  *       201:
  *         description: Group created successfully
@@ -266,6 +263,7 @@ router.post(
   "/",
   auth(),
   validate(createGroupSchema),
+  multerHostMiddleware("coverUrl", ["jpg", "jpeg", "png"]).single("image"),
   errorHandler(groupController.createGroup)
 );
 
