@@ -71,11 +71,23 @@ function buildVertexError(response, raw, message) {
   return err;
 }
 
-function createSession(userId) {
-  return postToEngine(':query', {
+async function createSession(userId) {
+  const response = await postToEngine(':query', {
     class_method: 'async_create_session',
     input: { user_id: userId }
   });
+
+  const sessionId =
+    response?.session_id ||
+    response?.output?.session_id ||
+    response?.output?.id ||
+    response?.id;
+
+  if (!sessionId) {
+    throw new Error('Failed to create session');
+  }
+
+  return sessionId;
 }
 
 function listSessions(userId) {
