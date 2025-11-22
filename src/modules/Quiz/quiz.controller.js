@@ -25,15 +25,26 @@ export class QuizController {
             
             // Store quizId in session for frontend to detect
             if (sessionId && newQuiz._id) {
-                console.log(`💾 Storing quizId in session: ${sessionId}`);
-                await ChatSession.findOneAndUpdate(
+                console.log(`💾 Attempting to store quizId in session: ${sessionId}`);
+                console.log(`   Quiz ID to store: ${newQuiz._id}`);
+                
+                const updateResult = await ChatSession.findOneAndUpdate(
                     { sessionId },
                     { currentQuizId: newQuiz._id },
-                    { upsert: false }
+                    { upsert: false, new: true }
                 );
-                console.log('✅ Quiz ID stored in session');
+                
+                if (updateResult) {
+                    console.log('✅ Quiz ID stored in session successfully');
+                    console.log('   Updated session:', updateResult.sessionId, '-> quizId:', updateResult.currentQuizId);
+                } else {
+                    console.warn('⚠️ Session not found in database:', sessionId);
+                    console.warn('   Quiz created but session does not exist yet');
+                }
             } else {
-                console.warn('⚠️ Cannot store quizId - missing sessionId or quizId');
+                console.warn('⚠️ Cannot store quizId - missing data:');
+                console.warn('   sessionId:', sessionId);
+                console.warn('   quizId:', newQuiz._id);
             }
             
             res.status(201).json({
@@ -69,13 +80,21 @@ export class QuizController {
             
             // Store quizId in session for frontend to detect
             if (sessionId) {
-                console.log(`💾 Storing updated quizId in session: ${sessionId}`);
-                await ChatSession.findOneAndUpdate(
+                console.log(`💾 Attempting to store updated quizId in session: ${sessionId}`);
+                console.log(`   Quiz ID to store: ${id}`);
+                
+                const updateResult = await ChatSession.findOneAndUpdate(
                     { sessionId },
                     { currentQuizId: id },
-                    { upsert: false }
+                    { upsert: false, new: true }
                 );
-                console.log('✅ Quiz ID stored in session');
+                
+                if (updateResult) {
+                    console.log('✅ Quiz ID stored in session successfully');
+                    console.log('   Updated session:', updateResult.sessionId, '-> quizId:', updateResult.currentQuizId);
+                } else {
+                    console.warn('⚠️ Session not found in database:', sessionId);
+                }
             } else {
                 console.warn('⚠️ Cannot store quizId - missing sessionId');
             }

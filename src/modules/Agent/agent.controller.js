@@ -340,9 +340,9 @@ async function chat(req, res) {
     // Get current quiz ID from session (if any)
     const ChatSession = (await import('../../models/chatSession.model.js')).default;
     const session = await ChatSession.findOne({ sessionId: actualSessionId });
-    const currentQuizId = session?.currentQuizId || null;
+    const currentQuizId = session?.currentQuizId ? session.currentQuizId.toString() : '';
     
-    console.log('🎯 Current quiz ID for session:', currentQuizId);
+    console.log('🎯 Current quiz ID for session:', currentQuizId || '(empty)');
 
     // Build response object
     const responseData = {
