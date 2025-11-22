@@ -17,6 +17,15 @@ class GoogleAuthService {
    */
   async verifyGoogleToken(token) {
     try {
+      // Check if token is an access token (has different segment count)
+      const segments = token.split(".").length;
+      if (segments !== 3) {
+        throw new Error(
+          "Invalid token format. Expected Google ID Token (from id_token), not access token. " +
+            "Ensure frontend uses 'id_token' from Google OAuth response, not 'access_token'."
+        );
+      }
+
       const ticket = await this.client.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID,
