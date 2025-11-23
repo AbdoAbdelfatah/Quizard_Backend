@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import agentController from './agent.controller.js';
+import { auth } from '../../middlewares/authentication.middleware.js';
+import { AICreditController } from '../aiCredit/aiCredit.controller.js';
 
 const router = Router();
+const creditController = new AICreditController();
 
 router.get('/', agentController.root);
 router.get('/health', agentController.health);
@@ -11,7 +14,7 @@ router.get('/sessions/:userId', agentController.listSessions);
 router.get('/sessions/:userId/:sessionId', agentController.getSession);
 router.delete('/sessions/:userId/:sessionId', agentController.deleteSession);
 
-router.post('/chat', agentController.chat);
-router.post('/chat/stream', agentController.chatStream);
+router.post('/chat', auth(), creditController.checkAndDeductCreditsForChat, agentController.chat);
+router.post('/chat/stream', auth(), creditController.checkAndDeductCreditsForChat, agentController.chatStream);
 
 export default router;

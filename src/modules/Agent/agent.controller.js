@@ -355,7 +355,12 @@ async function chat(req, res) {
       quizAction: quizAction,
       quizUpdatedAt: quizUpdatedAt,
       timestamp: Date.now() / 1000,
-      isNewSession
+      isNewSession,
+      credits: req.creditDeduction ? {
+        creditsRemaining: req.creditDeduction.creditsRemaining,
+        creditsUsed: req.creditDeduction.creditsUsed,
+        creditsDeducted: req.creditDeduction.creditsDeducted
+      } : undefined
     };
 
     res.json(responseData);
@@ -412,7 +417,12 @@ async function chatStream(req, res) {
       success: true,
       userId,
       sessionId: actualSessionId,
-      response: agentResponse
+      response: agentResponse,
+      credits: req.creditDeduction ? {
+        creditsRemaining: req.creditDeduction.creditsRemaining,
+        creditsUsed: req.creditDeduction.creditsUsed,
+        creditsDeducted: req.creditDeduction.creditsDeducted
+      } : undefined
     });
   } catch (error) {
     console.error('Error in streaming:', error);

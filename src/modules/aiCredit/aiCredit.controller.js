@@ -4,6 +4,58 @@ import { ErrorClass } from "../../utils/errorClass.util.js";
 const creditService = new AICreditService();
 
 export class AICreditController {
+  /**
+   * Middleware for chat routes with default credit cost
+   * Uses aiCredit from body if provided, otherwise uses default (1 credit per chat)
+   */
+  checkAndDeductCreditsForChat = async (req, res, next) => {
+    try {
+      const userId = req.authUser._id;
+      // Use aiCredit from body if provided, otherwise default to 1
+      const aiCredit = req.body.aiCredit || 1;
+
+      // Get user's remaining credits from subscription
+      const creditInfo = await creditService.getRemainingCredits(userId);
+      req.userCredits = creditInfo;
+
+      // Check if user has enough credits
+      if (creditInfo.creditsRemaining < aiCredit) {
+        return next(
+          new ErrorClass(
+            `Insufficient AI credits. You have ${creditInfo.creditsRemaining} credit${creditInfo.creditsRemaining !== 1 ? 's' : ''} remaining but need ${aiCredit} to continue. Please upgrade your plan to get more credits.`,
+            403,
+            {
+              available: creditInfo.creditsRemaining,
+              required: aiCredit,
+            },
+            "checkAndDeductCreditsForChat"
+          )
+        );
+      }
+
+      // Deduct the credits
+      const deductionResult = await creditService.deductCredits(
+        userId,
+        aiCredit
+      );
+
+      // Attach deduction result to request for use in next middleware/controller
+      req.creditDeduction = deductionResult;
+
+      // Proceed to next middleware/controller
+      next();
+    } catch (error) {
+      next(
+        new ErrorClass(
+          "Failed to check and deduct AI credits",
+          500,
+          error.message,
+          "checkAndDeductCreditsForChat"
+        )
+      );
+    }
+  };
+
   checkAndDeductCredits = async (req, res, next) => {
     try {
       const userId = req.authUser._id;
