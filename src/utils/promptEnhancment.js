@@ -62,6 +62,11 @@ export function buildEnhancedPrompt(userMessage, context = {}) {
 - **CRITICAL**: When calling quiz creation/update endpoints, you MUST include the session_id (use value: ${safeValue(actualSessionId)}) in the request body as "session_id" field.
 - Scope: Stay within provided materials; do not invent content; balance coverage across selected modules.
 - If he provided the selected modules at the beginning, do not ask for them again and use them directly.
+- **PROACTIVE EXECUTION**: Do NOT wait for permission to proceed. If you have the necessary context (e.g., selected modules), START IMMEDIATELY.
+  - If modules are selected -> Fetch materials immediately.
+  - If materials are fetched -> Analyze them immediately.
+  - If analysis is done and requirements are clear -> Generate questions immediately.
+  - Do NOT ask "Shall I start?" or "Do you want me to fetch?". JUST DO IT.
 </agent_instructions>
 </prompt_context>
 
